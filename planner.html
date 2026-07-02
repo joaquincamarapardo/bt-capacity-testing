@@ -498,11 +498,17 @@ window.saveTeam = async (sel) => {
 // ── Exportar Excel ────────────────────────────────────────────────────────
 window.exportExcel = async () => {
   const btn = document.getElementById('btn-export');
-  btn.textContent = '⏳ Generando...';
+  btn.textContent = '⏳ Cargando datos...';
   btn.disabled = true;
 
   try {
     const wb = XLSX.utils.book_new();
+
+    // Cargar TODOS los meses de Firebase (no solo el actual)
+    btn.textContent = '⏳ Cargando todos los meses...';
+    const allSnap = await getDocs(collection(db, 'calendar'));
+    const allCalData = {};
+    allSnap.forEach(d => { allCalData[d.id] = d.data(); });
     const MONTHS_FULL = ["January","February","March","April","May","June",
                          "July","August","September","October","November","December"];
     const DAY_NAMES_EN = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
@@ -544,11 +550,11 @@ ${DAY_NAMES_EN[wd]}`);
 
       active.forEach(p => {
         const docId = `${mk}-${p.id}`;
-        const pData = calData[docId] || { days: {} };
+        const pData = allCalData[docId] || calData[docId] || { days: {} };
         const hd    = p.hrs ? p.hrs[mi] : 8;
         const pStart= new Date(p.start + 'T00:00:00');
         const pEnd  = p.end ? new Date(p.end + 'T23:59:59') : null;
-        const team  = pData.team || p.team || 'BT';
+        const team  = (allCalData[docId] || calData[docId] || {}).team || p.team || 'BT';
 
         let rowTotal = 0;
         const dayVals = [];
