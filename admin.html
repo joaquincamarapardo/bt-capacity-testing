@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>BT Capacity — Gestión de equipo</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--navy:#0D1B4B;--orange:#F26522;--gray:#F4F4F6;--border:#E0E0E0;--text:#1a1a1a;--muted:#6B7280;--pale:#E8F0FB}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--gray);min-height:100vh}
+.topbar{background:var(--navy);padding:.875rem 1.5rem;display:flex;align-items:center;justify-content:space-between}
+.topbar-left{display:flex;align-items:center;gap:12px}
+.back-btn{color:#90CAF9;text-decoration:none;font-size:13px;display:flex;align-items:center;gap:4px}
+.back-btn:hover{color:#fff}
+.topbar-title{font-size:15px;font-weight:500;color:#fff}
+.topbar-sub{font-size:11px;color:#90CAF9}
+.content{max-width:900px;margin:0 auto;padding:1.5rem}
+.tabs{display:flex;background:#fff;border-radius:12px;border:1px solid var(--border);overflow:hidden;margin-bottom:1.5rem}
+.tab{flex:1;padding:12px;font-size:13px;border:none;background:transparent;color:var(--muted);cursor:pointer;font-weight:400;transition:all .15s}
+.tab.active{background:var(--navy);color:#fff;font-weight:500}
+.panel{display:none}.panel.active{display:block}
+.form-card{background:#fff;border-radius:12px;border:1px solid var(--border);padding:1.5rem}
+.section{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:1.25rem 0 .75rem;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:12px;color:var(--muted);font-weight:500}
+.field input,.field select{font-size:13px;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:#fff;color:var(--text)}
+.field input:focus,.field select:focus{outline:none;border-color:var(--navy)}
+.hrs-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:6px}
+.hrs-cell{display:flex;flex-direction:column;align-items:center;gap:3px}
+.hrs-cell label{font-size:10px;color:var(--muted);font-weight:500}
+.hrs-cell input{width:100%;font-size:12px;padding:6px 4px;text-align:center;border-radius:6px;border:1px solid var(--border)}
+.toggle-row{display:flex;align-items:center;gap:12px;padding:10px 14px;border:1px solid var(--border);border-radius:8px;background:var(--gray)}
+.toggle{position:relative;width:38px;height:21px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0}
+.slider{position:absolute;inset:0;background:#CBD5E1;border-radius:21px;cursor:pointer;transition:.2s}
+.slider:before{content:'';position:absolute;width:15px;height:15px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s}
+.toggle input:checked+.slider{background:var(--orange)}
+.toggle input:checked+.slider:before{transform:translateX(17px)}
+.toggle-info strong{font-size:13px;color:var(--text);display:block}
+.toggle-info span{font-size:11px;color:var(--muted)}
+.actions{display:flex;justify-content:flex-end;gap:10px;margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border)}
+.btn-primary{background:var(--navy);color:#fff;border:none;padding:10px 24px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer}
+.btn-primary:hover{background:#1a2f6e}
+.btn-danger{background:var(--orange);color:#fff;border:none;padding:10px 24px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer}
+.btn-secondary{background:transparent;color:var(--text);border:1px solid var(--border);padding:10px 20px;border-radius:8px;font-size:13px;cursor:pointer}
+.note{font-size:12px;color:var(--muted);background:var(--pale);border:1px solid #BFDBFE;border-radius:8px;padding:10px 14px;margin-top:1rem}
+.note-warn{background:#FFF5F5;border-color:#FECACA;color:#991B1B}
+.success-msg{background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:12px 16px;font-size:13px;color:#166534;margin-top:1rem;display:none}
+
+/* Roster table */
+.tw{overflow-x:auto;border:1px solid var(--border);border-radius:12px;margin-top:1rem}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{background:var(--navy);color:#fff;padding:8px 10px;text-align:left;font-weight:500;white-space:nowrap}
+td{padding:7px 10px;border-bottom:1px solid var(--border);color:var(--text);white-space:nowrap}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#F9FAFB}
+.badge-on{background:#DBEAFE;color:#1E40AF;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:500}
+.badge-off{background:#FEF3C7;color:#92400E;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:500}
+.badge-active{background:#DCFCE7;color:#166534;padding:2px 7px;border-radius:10px;font-size:10px}
+.badge-inactive{background:#FEE2E2;color:#991B1B;padding:2px 7px;border-radius:10px;font-size:10px}
+@media(max-width:600px){.grid2,.grid3{grid-template-columns:1fr}.hrs-grid{grid-template-columns:repeat(4,1fr)}}
+
+/* Modal edición */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;display:none;align-items:center;justify-content:center;padding:1rem}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:16px;padding:1.5rem;max-width:680px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem}
+.modal-header h3{font-size:16px;font-weight:600;color:var(--navy)}
+.modal-close{background:transparent;border:none;font-size:20px;cursor:pointer;color:var(--muted);line-height:1}
+.modal-close:hover{color:var(--text)}
+.btn-edit{background:var(--pale);color:var(--navy);border:1px solid #BFDBFE;padding:3px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-weight:500}
+.btn-edit:hover{background:#DBEAFE}
+.btn-delete{background:#FEF2F2;color:#991B1B;border:1px solid #FECACA;padding:3px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-weight:500;margin-left:4px}
+.btn-delete:hover{background:#FEE2E2}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="index.html" class="back-btn">← Inicio</a>
+    <div>
+      <div class="topbar-title">Gestión de equipo BT</div>
+      <div class="topbar-sub">Altas · Bajas · Team Roster</div>
+    </div>
+  </div>
+</div>
+
+<div class="content">
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('alta',this)">➕ Alta</button>
+    <button class="tab" onclick="showTab('baja',this)">➖ Baja</button>
+    <button class="tab" onclick="showTab('roster',this)">👥 Team Roster</button>
+    <button class="tab" onclick="showTab('accesos',this)">🔑 Accesos</button>
+  </div>
+
+  <!-- ALTA -->
+  <div id="tab-alta" class="panel active">
+    <div class="form-card">
+      <div class="section">Datos de identificación</div>
+      <div class="grid3">
+        <div class="field"><label>Nombre completo *</label><input type="text" id="a-nombre" placeholder="Ana García López"></div>
+        <div class="field"><label>Usuario (ID)</label><input type="text" id="a-usuario" placeholder="X123456"></div>
+        <div class="field"><label>Correo electrónico *</label><input type="email" id="a-email" placeholder="ana.garcia@dxc.com"></div>
+      </div>
+      <div class="section">Asignación</div>
+      <div class="grid3">
+        <div class="field"><label>Equipo *</label>
+          <select id="a-equipo"><option>BT</option><option>Financiacion</option><option>Seguros</option><option>MMPP</option><option>Pagos</option><option>Pasivo</option><option>VOAC</option><option>Halley</option><option>GT</option></select>
+        </div>
+        <div class="field"><label>Modalidad *</label>
+          <select id="a-modalidad" onchange="setHrsDefault()"><option>Onsite</option><option>Offshore</option></select>
+        </div>
+        <div class="field"><label>Ciudad *</label><input type="text" id="a-ciudad" placeholder="Alicante"></div>
+      </div>
+      <div class="section">Periodo</div>
+      <div class="grid2">
+        <div class="field"><label>Fecha de alta *</label><input type="date" id="a-inicio"></div>
+        <div class="field"><label>Fecha de baja (opcional)</label><input type="date" id="a-fin"></div>
+      </div>
+      <div class="section">Horas por mes</div>
+      <div class="hrs-grid">
+        <div class="hrs-cell"><label>Ene</label><input class="hrs" type="number" value="8" min="1" max="12"></div>
+        <div class="hrs-cell"><label>Feb</label><input class="hrs" type="number" value="8" min="1" max="12"></div>
+        <div class="hrs-cell"><label>Mar</label><input class="hrs" type="number" value="8" min="1" max="12"></div>
+        <div class="hrs-cell"><label>Abr</label><input class="hrs" type="number" value="8" min="1" max="12"></div>
+        <div class="hrs-cell"><label>May</label><input class="hrs" type="number" value="8" min="1" max="12"></div>
+        <div class="hrs-cell"><label>Jun</label><input class="hrs" type="number" value="8" min="1" max="12"></div>
+        <div class="hrs-cell"><label>Jul</label><input class="hrs" type="number" value="8" min="1" max="12"></div>
+        <div class="hrs-cell"><label>Ago</label><input class="hrs" type="number" value="8" min="1" max="12"></div>
+        <div class="hrs-cell"><label>Sep</label><input class="hrs" type="number" value="8" min="1" max="12"></div>
+        <div class="hrs-cell"><label>Oct</label><input class="hrs" type="number" value="8" min="1" max="12"></div>
+        <div class="hrs-cell"><label>Nov</label><input class="hrs" type="number" value="8" min="1" max="12"></div>
+        <div class="hrs-cell"><label>Dic</label><input class="hrs" type="number" value="8" min="1" max="12"></div>
+      </div>
+      <div class="section">Jornada flexible</div>
+      <div class="toggle-row">
+        <label class="toggle"><input type="checkbox" id="a-flex"><span class="slider"></span></label>
+        <div class="toggle-info">
+          <strong>Acuerdo de jornada flexible / Flex work</strong>
+          <span>Se registrará en el roster y en los calendarios</span>
+        </div>
+      </div>
+      <div class="note">ℹ️ Al confirmar, la persona se añadirá al roster y aparecerá en los calendarios mensuales correspondientes con sus horas diarias.</div>
+      <div class="success-msg" id="alta-success">✅ Alta registrada correctamente en Firebase.</div>
+      <div class="actions">
+        <button class="btn-secondary" onclick="resetAlta()">Limpiar</button>
+        <button class="btn-primary" onclick="confirmarAlta()">Confirmar alta</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BAJA -->
+  <div id="tab-baja" class="panel">
+    <div class="form-card">
+      <div class="section">Seleccionar persona</div>
+      <div class="grid2">
+        <div class="field"><label>Nombre *</label>
+          <select id="b-nombre"><option value="">— Seleccionar persona —</option></select>
+        </div>
+        <div class="field"><label>Fecha de baja *</label><input type="date" id="b-fecha"></div>
+      </div>
+      <div class="field" style="margin-top:12px"><label>Motivo</label>
+        <select id="b-motivo"><option>Fin de contrato</option><option>Rotación interna</option><option>Baja voluntaria</option><option>Otro</option></select>
+      </div>
+      <div class="note note-warn">⚠️ Los días posteriores a la fecha de baja se marcarán como inactivos en los calendarios. Esta acción se puede revertir.</div>
+      <div class="success-msg" id="baja-success">✅ Baja registrada correctamente en Firebase.</div>
+      <div class="actions">
+        <button class="btn-secondary" onclick="resetBaja()">Limpiar</button>
+        <button class="btn-danger" onclick="confirmarBaja()">Confirmar baja</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROSTER -->
+  <div id="tab-roster" class="panel">
+    <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:1rem;align-items:center">
+      <button class="btn-primary" onclick="downloadExcel()" id="btn-download">⬇️ Descargar Excel</button>
+      <div style="display:flex;gap:8px;align-items:center;background:#fff;padding:8px 12px;border-radius:8px;border:1px solid var(--border)">
+        <span style="font-size:12px;color:var(--muted);font-weight:500">Copiar emails:</span>
+        <select id="email-mode" style="font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid var(--border)">
+          <option value="all">Todos activos</option>
+          <option value="Onsite">Solo Onsite activos</option>
+          <option value="Offshore">Solo Offshore activos</option>
+        </select>
+        <button class="btn-primary" style="padding:6px 14px;font-size:12px" onclick="copyEmails()">📋 Copiar emails</button>
+        <span id="email-copied" style="font-size:11px;color:#166534;display:none">✓ Copiado</span>
+      </div>
+    </div>
+    <div class="tw">
+      <table>
+        <thead><tr>
+          <th>#</th><th>Nombre</th><th>Usuario</th><th>Email</th>
+          <th>Equipo</th><th>Modo</th><th>Ciudad</th>
+          <th>Alta</th><th>Baja</th><th>Flex</th><th>Acciones</th>
+        </tr></thead>
+        <tbody id="roster-tbody"><tr><td colspan="10" style="text-align:center;padding:2rem;color:var(--muted)">Cargando...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Accesos -->
+  <div id="tab-accesos" class="panel">
+    <div class="form-card">
+      <div class="section">Crear o restablecer contraseña de usuario</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:1rem;line-height:1.6">
+        Usa esta herramienta para crear la contraseña inicial de un usuario nuevo o restablecer la de uno existente.
+        El usuario podrá cambiarla después desde la pantalla de login.
+      </p>
+      <div class="grid2">
+        <div class="field"><label>Email del usuario *</label>
+          <select id="acc-email" style="font-size:13px;padding:8px 10px;border-radius:8px;border:1px solid var(--border)">
+            <option value="">— Seleccionar persona —</option>
+          </select>
+        </div>
+        <div class="field"><label>Contraseña temporal *</label>
+          <input type="text" id="acc-pass" placeholder="Mínimo 6 caracteres" value="BT2026!">
+        </div>
+      </div>
+      <div class="note">ℹ️ Se creará o actualizará la cuenta de Firebase Auth para este usuario. El usuario deberá cambiar su contraseña en el primer acceso desde la opción "Cambiar contraseña".</div>
+      <div class="success-msg" id="acc-success">✅ Cuenta creada/actualizada correctamente.</div>
+      <div class="actions">
+        <button class="btn-primary" onclick="crearCuentaUsuario()">🔑 Crear / Restablecer contraseña</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal edición -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>✏️ Editar persona</h3>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="section">Datos de identificación</div>
+    <div class="grid3">
+      <div class="field"><label>Nombre completo *</label><input type="text" id="e-nombre"></div>
+      <div class="field"><label>Usuario (ID)</label><input type="text" id="e-usuario"></div>
+      <div class="field"><label>Email *</label><input type="email" id="e-email"></div>
+    </div>
+    <div class="section">Asignación</div>
+    <div class="grid3">
+      <div class="field"><label>Equipo</label>
+        <select id="e-equipo"><option>BT</option><option>Financiacion</option><option>Seguros</option><option>MMPP</option><option>Pagos</option><option>Pasivo</option><option>VOAC</option><option>Halley</option><option>GT</option></select>
+      </div>
+      <div class="field"><label>Modalidad</label>
+        <select id="e-modalidad"><option>Onsite</option><option>Offshore</option></select>
+      </div>
+      <div class="field"><label>Ciudad</label><input type="text" id="e-ciudad"></div>
+    </div>
+    <div class="section">Periodo</div>
+    <div class="grid2">
+      <div class="field"><label>Fecha de alta</label><input type="date" id="e-inicio"></div>
+      <div class="field"><label>Fecha de baja (vaciar para reactivar)</label><input type="date" id="e-fin"></div>
+    </div>
+    <div class="section">Horas por mes</div>
+    <div class="hrs-grid">
+      <div class="hrs-cell"><label>Ene</label><input class="e-hrs" type="number" min="1" max="12"></div>
+      <div class="hrs-cell"><label>Feb</label><input class="e-hrs" type="number" min="1" max="12"></div>
+      <div class="hrs-cell"><label>Mar</label><input class="e-hrs" type="number" min="1" max="12"></div>
+      <div class="hrs-cell"><label>Abr</label><input class="e-hrs" type="number" min="1" max="12"></div>
+      <div class="hrs-cell"><label>May</label><input class="e-hrs" type="number" min="1" max="12"></div>
+      <div class="hrs-cell"><label>Jun</label><input class="e-hrs" type="number" min="1" max="12"></div>
+      <div class="hrs-cell"><label>Jul</label><input class="e-hrs" type="number" min="1" max="12"></div>
+      <div class="hrs-cell"><label>Ago</label><input class="e-hrs" type="number" min="1" max="12"></div>
+      <div class="hrs-cell"><label>Sep</label><input class="e-hrs" type="number" min="1" max="12"></div>
+      <div class="hrs-cell"><label>Oct</label><input class="e-hrs" type="number" min="1" max="12"></div>
+      <div class="hrs-cell"><label>Nov</label><input class="e-hrs" type="number" min="1" max="12"></div>
+      <div class="hrs-cell"><label>Dic</label><input class="e-hrs" type="number" min="1" max="12"></div>
+    </div>
+    <div class="section">Jornada flexible</div>
+    <div class="toggle-row">
+      <label class="toggle"><input type="checkbox" id="e-flex"><span class="slider"></span></label>
+      <div class="toggle-info"><strong>Acuerdo de jornada flexible</strong><span>Flex work</span></div>
+    </div>
+    <div class="actions">
+      <button class="btn-secondary" onclick="closeModal()">Cancelar</button>
+      <button class="btn-primary" onclick="guardarEdicion()">Guardar cambios</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { auth, db, onAuthStateChanged, collection, getDocs, doc, setDoc, getDoc, onSnapshot }
+  from './firebase-config.js';
+
+const MNS = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+
+// Auth guard — solo admins pueden editar/eliminar
+onAuthStateChanged(auth, user => {
+  if(!user) { window.location = 'index.html'; return; }
+  const role = sessionStorage.getItem('userRole') || 'user';
+  window._isAdmin = role === 'admin';
+  if(!window._isAdmin) {
+    // Ocultar pestañas de alta, baja y accesos para no-admins
+    document.querySelectorAll('.tab').forEach(t => {
+      if(t.textContent.includes('Alta') || t.textContent.includes('Baja') || t.textContent.includes('Accesos')) {
+        t.style.display = 'none';
+      }
+    });
+    // Mostrar directamente el roster
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('tab-roster').classList.add('active');
+  }
+  loadRoster();
+});
+
+// Cargar roster
+async function loadRoster() {
+  const snap = await getDocs(collection(db, 'roster'));
+  const people = [];
+  snap.forEach(d => people.push({id: d.id, ...d.data()}));
+  people.sort((a,b) => a.name.localeCompare(b.name));
+  window._rosterPeople = people; // para descarga y emails
+
+  // Poblar selector de accesos
+  const accSel = document.getElementById('acc-email');
+  if(accSel) {
+    accSel.innerHTML = '<option value="">— Seleccionar persona —</option>';
+    people.filter(p => p.email).forEach(p => {
+      const o = document.createElement('option');
+      o.value = p.email; o.textContent = `${p.name} (${p.email})`;
+      accSel.appendChild(o);
+    });
+  }
+
+  // Tabla roster
+  const tbody = document.getElementById('roster-tbody');
+  if(people.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:2rem;color:var(--muted)">Sin datos — importa el Excel para comenzar</td></tr>';
+  } else {
+    tbody.innerHTML = people.map((p,i) => `<tr>
+      <td>${i+1}</td>
+      <td><strong>${p.name}</strong></td>
+      <td>${p.username||'—'}</td>
+      <td>${p.email||'—'}</td>
+      <td>${p.team||'BT'}</td>
+      <td><span class="${p.mode==='Onsite'?'badge-on':'badge-off'}">${p.mode}</span></td>
+      <td>${p.city||'—'}</td>
+      <td>${p.start||'—'}</td>
+      <td>${p.end||'—'}</td>
+      <td>${p.flex?'✓':''}</td>
+      <td>${window._isAdmin ? `<button class="btn-edit" onclick="openEdit('${p.id}')">✏️ Editar</button><button class="btn-delete" onclick="eliminarPersona('${p.id}','${p.name}')">🗑️</button>` : '—'}</td>
+    </tr>`).join('');
+  }
+
+  // Selector baja
+  const sel = document.getElementById('b-nombre');
+  sel.innerHTML = '<option value="">— Seleccionar —</option>';
+  people.filter(p=>!p.end).forEach(p => {
+    const o = document.createElement('option');
+    o.value = p.id; o.textContent = `${p.name} (${p.mode})`;
+    sel.appendChild(o);
+  });
+}
+
+// Alta
+window.setHrsDefault = () => {
+  const val = document.getElementById('a-modalidad').value === 'Offshore' ? 9 : 8;
+  document.querySelectorAll('.hrs').forEach(i => i.value = val);
+};
+
+window.confirmarAlta = async () => {
+  const nombre = document.getElementById('a-nombre').value.trim();
+  const email  = document.getElementById('a-email').value.trim();
+  const inicio = document.getElementById('a-inicio').value;
+  if(!nombre || !email || !inicio) { alert('Rellena los campos obligatorios: Nombre, Email y Fecha de alta.'); return; }
+
+  const hrs = Array.from(document.querySelectorAll('.hrs')).map(i => parseInt(i.value)||8);
+  const id  = nombre.toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'');
+
+  const data = {
+    name:     nombre,
+    username: document.getElementById('a-usuario').value.trim(),
+    email:    email,
+    team:     document.getElementById('a-equipo').value,
+    mode:     document.getElementById('a-modalidad').value,
+    city:     document.getElementById('a-ciudad').value.trim(),
+    start:    inicio,
+    end:      document.getElementById('a-fin').value || null,
+    flex:     document.getElementById('a-flex').checked,
+    hrs:      hrs,
+    createdAt: new Date().toISOString()
+  };
+
+  try {
+    // 1. Guardar en roster
+    await setDoc(doc(db, 'roster', id), data);
+
+    // 2. Crear documentos de calendario para cada mes activo
+    const MN = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    const DAYS_IN_MONTH = [31,28,31,30,31,30,31,31,30,31,30,31];
+    const YEAR = 2026;
+    const startDate = new Date(inicio);
+    const endDate   = data.end ? new Date(data.end) : null;
+    const team      = data.team || 'BT';
+
+    // Crear calendario usando función auxiliar (fechas inclusivas)
+    const mesesCreados = await actualizarCalendario(id, nombre, team, data.mode, inicio, data.end||null, hrs);
+
+    // Crear usuario en colección users con rol 'user' (si no existe ya)
+    const userId = email.replace(/[@.]/g, '_');
+    const userRef = doc(db, 'users', userId);
+    const userSnap = await getDoc(userRef);
+    if(!userSnap.exists()) {
+      await setDoc(userRef, {
+        email: email,
+        name:  nombre,
+        role:  'user',
+        createdAt: new Date().toISOString()
+      });
+    }
+
+    document.getElementById('alta-success').textContent =
+      `✅ Alta registrada correctamente. Calendario creado para ${mesesCreados} meses.`;
+    document.getElementById('alta-success').style.display = 'block';
+    setTimeout(() => document.getElementById('alta-success').style.display = 'none', 4000);
+    loadRoster();
+  } catch(e) { alert('Error: ' + e.message); }
+};
+
+window.resetAlta = () => {
+  ['a-nombre','a-usuario','a-email','a-ciudad','a-inicio','a-fin'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('a-flex').checked = false;
+  document.querySelectorAll('.hrs').forEach(i => i.value = 8);
+};
+
+// Baja
+window.confirmarBaja = async () => {
+  const id    = document.getElementById('b-nombre').value;
+  const fecha = document.getElementById('b-fecha').value;
+  if(!id || !fecha) { alert('Selecciona una persona y una fecha de baja.'); return; }
+  try {
+    // 1. Actualizar roster con fecha de baja
+    await setDoc(doc(db, 'roster', id), { end: fecha, motivo: document.getElementById('b-motivo').value }, { merge: true });
+
+    // 2. Eliminar acceso — borrar de colección users
+    const person = window._rosterPeople.find(x => x.id === id);
+    if(person && person.email) {
+      const userId = person.email.replace(/[@.]/g, '_');
+      const { deleteDoc: delDoc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+      await delDoc(doc(db, 'users', userId)).catch(() => {});
+    }
+
+    document.getElementById('baja-success').textContent = '✅ Baja registrada y acceso revocado correctamente.';
+    document.getElementById('baja-success').style.display = 'block';
+    setTimeout(() => document.getElementById('baja-success').style.display = 'none', 3000);
+    loadRoster();
+  } catch(e) { alert('Error: ' + e.message); }
+};
+
+window.resetBaja = () => {
+  document.getElementById('b-nombre').value = '';
+  document.getElementById('b-fecha').value  = '';
+};
+
+// ── Descargar Excel ──────────────────────────────────────────────────────
+window.downloadExcel = () => {
+  if(!window._rosterPeople || !window._rosterPeople.length) {
+    alert('No hay datos en el roster todavía.'); return;
+  }
+  const MNS = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  const headers = ['#','Nombre','Usuario','Email','Equipo','Modalidad','Ciudad','Fecha alta','Fecha baja','Flex work',
+    ...MNS.map(m => `H ${m}`)];
+  const rows = window._rosterPeople.map((p,i) => [
+    i+1, p.name||'', p.username||'', p.email||'', p.team||'BT',
+    p.mode||'', p.city||'', p.start||'', p.end||'', p.flex?'Sí':'No',
+    ...(p.hrs||[8,8,8,8,8,8,8,8,8,8,8,8])
+  ]);
+  const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'BT_Team_Roster.csv';
+  a.click();
+};
+
+// ── Copiar emails ──────────────────────────────────────────────────────────
+window.copyEmails = () => {
+  if(!window._rosterPeople || !window._rosterPeople.length) {
+    alert('No hay datos en el roster todavía.'); return;
+  }
+  const mode = document.getElementById('email-mode').value;
+  const today = new Date().toISOString().split('T')[0];
+  const filtered = window._rosterPeople.filter(p => {
+    const active = !p.end || p.end >= today;
+    if(!active) return false;
+    if(mode === 'Onsite')   return p.mode === 'Onsite';
+    if(mode === 'Offshore') return p.mode === 'Offshore';
+    return true;
+  }).filter(p => p.email);
+  const emails = filtered.map(p => p.email).join('; ');
+  navigator.clipboard.writeText(emails).then(() => {
+    const el = document.getElementById('email-copied');
+    el.textContent = `✓ ${filtered.length} emails copiados`;
+    el.style.display = 'inline';
+    setTimeout(() => el.style.display = 'none', 3000);
+  });
+};
+
+// ── Función auxiliar: generar/actualizar calendario ─────────────────────
+async function actualizarCalendario(id, nombre, team, mode, start, end, hrs) {
+  const MN = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const DAYS_IN_MONTH = [31,28,31,30,31,30,31,31,30,31,30,31];
+  const YEAR = 2026;
+  // Parsear como hora local para evitar problemas de timezone
+  const startDate = new Date(start + 'T00:00:00');
+  const endDate   = end ? new Date(end + 'T23:59:59') : null;
+
+  const promises = [];
+  for(let mi = 0; mi < 12; mi++) {
+    const mk         = MN[mi];
+    const monthStart = new Date(YEAR, mi, 1);
+    const monthEnd   = new Date(YEAR, mi, DAYS_IN_MONTH[mi]);
+
+    // Persona activa en este mes
+    if(startDate > monthEnd) continue;
+    if(endDate && endDate < monthStart) continue;
+
+    const hd = hrs[mi] || (mode==='Offshore' ? 9 : 8);
+    const fw = (new Date(YEAR, mi, 1).getDay() + 6) % 7;
+    const days = {};
+
+    for(let d = 1; d <= DAYS_IN_MONTH[mi]; d++) {
+      const wd = (fw + d - 1) % 7;
+      if(wd >= 5) continue;
+      // Normalizar dd a medianoche para comparación correcta
+      const dd = new Date(YEAR, mi, d, 0, 0, 0, 0);
+      if(dd < startDate) continue;
+      if(endDate && dd > endDate) continue;
+      days[String(d)] = hd;
+    }
+
+    const docId = `${mk}-${id}`;
+    // Leer calendario existente para preservar ediciones manuales
+    const existing = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js')
+      .then(m => m.getDoc(m.doc(db, 'calendar', docId)))
+      .then(snap => snap.exists() ? snap.data() : null);
+
+    if(existing) {
+      // Preservar ediciones manuales — solo añadir días nuevos o quitar días fuera de rango
+      const mergedDays = { ...existing.days };
+      // Quitar días que quedan fuera del nuevo rango
+      Object.keys(mergedDays).forEach(dStr => {
+        const dd = new Date(YEAR, mi, parseInt(dStr), 0, 0, 0, 0);
+        if(dd < startDate || (endDate && dd > endDate)) delete mergedDays[dStr];
+      });
+      // Añadir días nuevos que no existían
+      Object.entries(days).forEach(([dStr, val]) => {
+        if(mergedDays[dStr] === undefined) mergedDays[dStr] = val;
+      });
+      promises.push(setDoc(doc(db, 'calendar', docId), { ...existing, name: nombre, team, days: mergedDays }));
+    } else {
+      promises.push(setDoc(doc(db, 'calendar', docId), { name: nombre, team, month: mk, monthIndex: mi, days }));
+    }
+  }
+  await Promise.all(promises);
+  return promises.length;
+}
+
+// ── Edición ──────────────────────────────────────────────────────────────
+window.openEdit = (id) => {
+  const p = window._rosterPeople.find(x => x.id === id);
+  if(!p) return;
+  window._editId = id;
+  document.getElementById('e-nombre').value   = p.name    || '';
+  document.getElementById('e-usuario').value  = p.username|| '';
+  document.getElementById('e-email').value    = p.email   || '';
+  document.getElementById('e-ciudad').value   = p.city    || '';
+  document.getElementById('e-inicio').value   = p.start   || '';
+  document.getElementById('e-fin').value      = p.end     || '';
+  document.getElementById('e-flex').checked   = !!p.flex;
+  document.getElementById('e-equipo').value   = p.team    || 'BT';
+  document.getElementById('e-modalidad').value= p.mode    || 'Onsite';
+  const hrs = p.hrs || [8,8,8,8,8,8,8,8,8,8,8,8];
+  document.querySelectorAll('.e-hrs').forEach((inp,i) => inp.value = hrs[i]||8);
+  document.getElementById('modal-overlay').classList.add('open');
+};
+
+window.closeModal = () => {
+  document.getElementById('modal-overlay').classList.remove('open');
+  window._editId = null;
+};
+
+window.guardarEdicion = async () => {
+  const id = window._editId; if(!id) return;
+  const nombre = document.getElementById('e-nombre').value.trim();
+  const email  = document.getElementById('e-email').value.trim();
+  if(!nombre || !email) { alert('Nombre y email son obligatorios.'); return; }
+  const hrs = Array.from(document.querySelectorAll('.e-hrs')).map(i => parseInt(i.value)||8);
+  const fin = document.getElementById('e-fin').value;
+  const data = {
+    name:     nombre,
+    username: document.getElementById('e-usuario').value.trim(),
+    email:    email,
+    team:     document.getElementById('e-equipo').value,
+    mode:     document.getElementById('e-modalidad').value,
+    city:     document.getElementById('e-ciudad').value.trim(),
+    start:    document.getElementById('e-inicio').value,
+    end:      fin || null,
+    flex:     document.getElementById('e-flex').checked,
+    hrs:      hrs
+  };
+  try {
+    // 1. Actualizar roster
+    await setDoc(doc(db, 'roster', id), data, { merge: true });
+
+    // 2. Actualizar calendario (fechas inclusivas, preserva ediciones manuales)
+    const mesesActualizados = await actualizarCalendario(
+      id, nombre, data.team, data.mode, data.start, data.end || null, hrs
+    );
+
+    closeModal();
+    await loadRoster();
+    const msg = document.createElement('div');
+    msg.style.cssText = 'position:fixed;bottom:1.5rem;right:1.5rem;background:#166534;color:#fff;padding:.75rem 1.25rem;border-radius:10px;font-size:13px;z-index:9999';
+    msg.textContent = `✅ Cambios guardados. Calendario actualizado (${mesesActualizados} meses).`;
+    document.body.appendChild(msg);
+    setTimeout(() => msg.remove(), 4000);
+  } catch(e) { alert('Error al guardar: ' + e.message); }
+};
+
+window.eliminarPersona = async (id, nombre) => {
+  if(!confirm(`⚠️ ¿Eliminar a ${nombre} del roster?\n\nSe eliminarán también todos sus datos de calendario. Esta acción no se puede deshacer.`)) return;
+  try {
+    const { deleteDoc, getDocs, collection: col, query, where } =
+      await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+
+    // 1. Borrar del roster
+    await deleteDoc(doc(db, 'roster', id));
+
+    // 2. Borrar todos los documentos de calendario de esta persona
+    const MN = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    const calDeletes = MN.map(mk => deleteDoc(doc(db, 'calendar', `${mk}-${id}`)));
+    await Promise.allSettled(calDeletes);
+
+    // 3. Borrar de la colección users
+    const p = window._rosterPeople.find(x => x.id === id);
+    if(p && p.email) {
+      const userId = p.email.replace(/[@.]/g, '_');
+      await deleteDoc(doc(db, 'users', userId)).catch(() => {});
+    }
+
+    await loadRoster();
+    const msg = document.createElement('div');
+    msg.style.cssText = 'position:fixed;bottom:1.5rem;right:1.5rem;background:#991B1B;color:#fff;padding:.75rem 1.25rem;border-radius:10px;font-size:13px;z-index:9999';
+    msg.textContent = `🗑️ ${nombre} eliminado del roster, calendarios y accesos`;
+    document.body.appendChild(msg);
+    setTimeout(() => msg.remove(), 3000);
+  } catch(e) { alert('Error al eliminar: ' + e.message); }
+};
+
+// Cerrar modal al hacer clic fuera
+document.getElementById('modal-overlay').addEventListener('click', e => {
+  if(e.target === document.getElementById('modal-overlay')) closeModal();
+});
+
+// ── Gestión de accesos ───────────────────────────────────────────────────
+window.crearCuentaUsuario = async () => {
+  const email = document.getElementById('acc-email').value;
+  const pass  = document.getElementById('acc-pass').value;
+  if(!email) { alert('Selecciona un usuario.'); return; }
+  if(!pass || pass.length < 6) { alert('La contraseña debe tener al menos 6 caracteres.'); return; }
+
+  try {
+    // Usar Firebase Admin via REST API para crear/actualizar usuario
+    // Como no tenemos backend, usamos el endpoint de signup de Firebase Auth
+    const apiKey = 'AIzaSyBltWXJaPOnbQXd2FdqHvGtqiS_RHrXQLY';
+
+    // Intentar crear usuario nuevo
+    const resp = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: pass, returnSecureToken: false })
+    });
+    const data = await resp.json();
+
+    if(data.error) {
+      if(data.error.message === 'EMAIL_EXISTS') {
+        // Usuario ya existe → usar reset password
+        const { sendPasswordResetEmail } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js');
+        await sendPasswordResetEmail(auth, email);
+        document.getElementById('acc-success').textContent =
+          `✅ El usuario ya existe. Se ha enviado un email de restablecimiento a ${email}.`;
+      } else {
+        throw new Error(data.error.message);
+      }
+    } else {
+      document.getElementById('acc-success').textContent =
+        `✅ Cuenta creada para ${email}. Contraseña temporal: ${pass}`;
+    }
+    document.getElementById('acc-success').style.display = 'block';
+    setTimeout(() => document.getElementById('acc-success').style.display = 'none', 5000);
+  } catch(e) { alert('Error: ' + e.message); }
+};
+
+window.showTab = (id, btn) => {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  btn.classList.add('active');
+};
+</script>
+</body>
+</html>
