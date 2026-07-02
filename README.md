@@ -3,7 +3,7 @@
 Aplicación web completa para la gestión y visualización de la capacidad del equipo BT de DXC Technology.
 
 ## 🌐 Acceso
-**https://joaquincamarapardo.github.io/bt-capacity/**
+**https://joaquincamarapardo.github.io/bt-capacity-testing/**
 
 Requiere cuenta Google autorizada por el administrador.
 
